@@ -5,21 +5,30 @@ from aiohttp import web
 import asyncio
 
 intents = discord.Intents.default()
-intents.members = True
-intents.guilds = True
-intents.message_content = True
+intents.message_content = True  # Needed to read message content
 
 bot = commands.Bot(command_prefix='!', intents=intents)
+
+@bot.event
+async def on_ready():
+    print(f"✅ Logged in as {bot.user}")
+
+@bot.event
+async def on_message(message):
+    if message.author.bot:
+        return
+    if 'ybnba' in message.content.lower():
+        try:
+            await message.add_reaction('✅')
+        except discord.errors.Forbidden:
+            print("⚠️ Missing permission to add reactions")
+    await bot.process_commands(message)
 
 async def handle(request):
     return web.Response(text="Bot is alive!")
 
 app = web.Application()
 app.add_routes([web.get('/', handle)])
-
-@bot.event
-async def on_ready():
-    print(f"✅ Logged in as {bot.user}")
 
 async def run():
     runner = web.AppRunner(app)
